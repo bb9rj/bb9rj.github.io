@@ -1,55 +1,121 @@
-<!DOCTYPE html>
-<html lang="en" class="light">
+\<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBPT Project</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Battle Points Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #results {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            height: 300px; /* Fixed height */
+            overflow-y: scroll; /* Enable scrolling */
+        }
+    </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-800 min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
-    <button id="darkModeToggle" aria-label="Toggle dark mode" class="absolute top-4 right-4 bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-    </button>
+<body>
 
-    <div class="bg-white dark:bg-gray-700 shadow-md rounded-lg p-6 w-full max-w-3xl">
-        <h1 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">CBPT Project</h1>
-        <button id="runScript" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out mb-4">
-            Run CBPT Script
-        </button>
-        <pre id="output" class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white p-4 rounded-lg overflow-auto max-h-96"></pre>
-    </div>
+    <h1>Battle Points Tracker</h1>
+    <button id="runScript">Run Script</button>
 
-    <!-- Include the cbpt_script.js file -->
-    <script src="cbpt_script.js"></script>
-    
+    <div id="results"></div>
+
+    <script src="script.js"></script>
     <script>
-        const outputElement = document.getElementById('output');
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const runScriptButton = document.getElementById('runScript');
+        // Reference to the results div
+        const resultsDiv = document.getElementById('results');
 
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        // Function to append output to results div
+        function appendToResults(output) {
+            resultsDiv.innerHTML += `<div>${output}</div>`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight; // Scroll to the bottom
         }
 
-        // Initialize dark mode based on user preference
-        if (localStorage.getItem('darkMode') === 'true' || 
-            (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
+        // Modify your existing functions to use appendToResults instead of console.log
+        async function fetch_and_display_user_data() {
+            let alert = "";
 
-        darkModeToggle.addEventListener('click', toggleDarkMode);
+            const max_points_length = Math.max(...data.users.map(user => user.current_points.toLocaleString().length));
 
-        runScriptButton.addEventListener('click', async () => {
-            outputElement.textContent = 'Running CBPT Script...';
-            try {
-                await main(); // Call the main function from cbpt_script.js
-                outputElement.textContent = 'Script finished running. Check the console for output.';
-            } catch (error) {
-                outputElement.textContent = `An error occurred: ${error.message}`;
+            for (const user of data.users) {
+                const data_from_api = await fetch_user_points(user);
+
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                if ("data" in data_from_api && BATTLE_TYPE in data_from_api.data.Battles) {
+                    const battle_data = data_from_api.data.Battles[BATTLE_TYPE];
+                    const user_points = battle_data.PointContributions.find(item => item.UserID === user.id)?.Points;
+
+                    if (user_points === undefined) {
+                        appendToResults(`User ${user.name} not found in battle ${BATTLE_TYPE} for clan ${user.clan}`);
+                        continue;
+                    }
+
+                    if (user.last_points === 0) {
+                        user.last_points = user_points;
+                        user.current_points = user_points;
+
+                        const current_points_str = user_points.toLocaleString();
+                        appendToResults(print_user_data(user, current_points_str, "", max_points_length));
+                        continue;
+                    }
+
+                    update_user_points(user, user_points);
+
+                    if (user.current_points - user.last_points === 0) {
+                        user.consecutive_zeros += 1;
+                    } else {
+                        user.consecutive_zeros = 0;
+                    }
+
+                    if (user.consecutive_zeros >= ZERO_POINTS_THRESHOLD) {
+                        alert += `\n${user.name} has ${ZERO_POINTS_THRESHOLD} consecutive 0-point increases!\nOpening URL...\n`;
+                        appendToResults(`Opening URL: ${ZERO_POINTS_URL}`);
+                        user.consecutive_zeros = 0; // Reset after alert
+                        await new Promise(resolve => setTimeout(resolve, 60000)); // Wait before next check
+                    }
+
+                    const points_difference = user.current_points - user.last_points;
+                    const huge_suffix = Math.abs(points_difference) > 250 ? " Huge!?" : "";
+                    if (huge_suffix) huge_suffix_count += 1;
+
+                    const current_points_str = user.current_points.toLocaleString();
+                    const points_difference_str = points_difference !== 0 ? `${points_difference >= 0 ? '+' : ''}${points_difference}${huge_suffix}` : "";
+                    
+                    appendToResults(print_user_data(user, current_points_str, points_difference_str, max_points_length));
+                } else {
+                    appendToResults(`Battle ${BATTLE_TYPE} not found!`);
+                }
             }
+
+            const spaces_huges = alignment_spaces(data.labels.huges);
+            appendToResults(`${data.labels.huges}${spaces_huges}: ${huge_suffix_count}`);
+
+            if (alert) {
+                appendToResults(alert);
+            }
+        }
+
+        function print_user_data(user, current_points_str, points_difference, max_points_length) {
+            const spaces_name = alignment_spaces(user.name || 'Unknown');
+            const spaces_points = alignment_spaces_for_points(current_points_str, max_points_length);
+            
+            let output = `${user.name}${spaces_name}: ${current_points_str}${spaces_points}`;
+            if (points_difference) {
+                output += ` (${points_difference})`;
+            }
+            return output;
+        }
+
+        // Update main function to call fetch_and_display_user_data when the button is clicked
+        document.getElementById('runScript').addEventListener('click', async () => {
+            resultsDiv.innerHTML = ""; // Clear previous results
+            await fetch_and_display_user_data();
         });
     </script>
 </body>
