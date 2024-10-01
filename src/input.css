@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom global styles can be added below */
+
+/* Example of custom styles */
+html {
+  scroll-behavior: smooth; /* Smooth scrolling for the entire page */
+}
+
+body {
+  font-family: 'Inter', sans-serif; /* Example font-family */
+  background-color: theme('colors.gray.50'); /* Light background color */
+  color: theme('colors.gray.800'); /* Dark text color */
+}
+
+.dark body {
+  background-color: theme('colors.gray.900'); /* Dark background color */
+  color: theme('colors.gray.100'); /* Light text color */
+}
+
+/* Custom utility classes can be added below */

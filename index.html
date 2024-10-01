@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>bb9rj's GitHub Page</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind configuration -->
     <script>
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: 'class', // Enables dark mode with class
             theme: {
                 extend: {
                     colors: {
@@ -18,8 +20,10 @@
             }
         }
     </script>
+    <!-- Custom styles -->
     <style type="text/tailwindcss">
         @layer utilities {
+            /* Animated gradient background */
             .animate-gradient {
                 background-size: 200%;
                 animation: gradient 5s ease infinite;
@@ -29,10 +33,24 @@
                 50% { background-position: 100% 50%; }
                 100% { background-position: 0% 50%; }
             }
+            /* Rainbow hover effect */
+            @keyframes rainbow {
+                0% { background-position: 0%; }
+                100% { background-position: 100%; }
+            }
+            .hover-rainbow {
+                background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #7f00ff, #ff0000);
+                background-size: 400%;
+                transition: background 0.5s ease;
+            }
+            .hover-rainbow:hover {
+                animation: rainbow 1s linear infinite;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-800 min-h-screen flex flex-col items-center justify-center transition-colors duration-300">
+    <!-- Dark mode toggle button -->
     <button id="darkModeToggle" aria-label="Toggle dark mode" class="absolute top-4 right-4 bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -40,25 +58,36 @@
     </button>
 
     <div class="text-center p-8">
+        <!-- Profile picture with animated gradient border -->
         <div class="relative w-40 h-40 mx-auto mb-4">
             <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary animate-gradient rounded-full"></div>
             <img id="profilePicture" class="w-full h-full object-cover rounded-full border-4 border-white dark:border-gray-700 relative z-10" src="https://via.placeholder.com/150" alt="Profile Picture">
         </div>
         <h1 class="text-4xl font-bold mb-4 text-gray-800 dark:text-white">bb9rj's GitHub Page</h1>
-        <div class="relative inline-block">
+        <!-- Repository button -->
+        <div class="relative inline-block mb-4">
             <div class="absolute inset-0 bg-primary dark:bg-secondary blur-md opacity-50 rounded-lg"></div>
             <a href="https://github.com/bb9rj?tab=repositories" class="relative inline-block bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-primary dark:text-blue-300 font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
                 View My Repositories
             </a>
         </div>
+        <!-- CBPT Project button with rainbow hover effect -->
+        <div class="relative inline-block">
+            <div class="absolute inset-0 bg-primary dark:bg-secondary blur-md opacity-50 rounded-lg"></div>
+            <a href="https://github.com/bb9rj/cbpt" class="relative inline-block bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-primary dark:text-blue-300 font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out hover-rainbow">
+                View My CBPT Project
+            </a>
+        </div>
     </div>
 
     <script>
+        // Function to toggle dark mode
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
         }
 
+        // Function to fetch and update profile picture
         function fetchProfilePicture() {
             fetch('https://api.github.com/users/bb9rj')
                 .then(response => {
@@ -74,17 +103,18 @@
                 })
                 .catch(error => {
                     console.error('Error fetching profile picture:', error);
-                    // Fallback to a default image if fetch fails
+                    // Fallback to GitHub identicon if fetch fails
                     document.getElementById('profilePicture').src = 'https://github.com/identicons/bb9rj.png';
                 });
         }
 
-        // Initialize dark mode based on user preference
+        // Initialize dark mode based on user preference or system setting
         if (localStorage.getItem('darkMode') === 'true' || 
             (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
 
+        // Add click event listener to dark mode toggle button
         document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
 
         // Fetch profile picture when the page loads

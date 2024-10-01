@@ -1,7 +1,7 @@
 import json
 import time
 from datetime import datetime
-import js
+import requests  # use requests instead of js
 
 # Constants
 API_URL = "https://biggamesapi.io/api/clan"
@@ -35,7 +35,7 @@ def alignment_spaces_for_points(current_points_str: str, max_points_length: int)
     return ' ' * (max_points_length - len(current_points_str))
 
 def fetch_user_points(user):
-    response = js.fetch(f"{API_URL}/{user['clan']}")
+    response = requests.get(f"{API_URL}/{user['clan']}")
     return response.json()
 
 def update_user_points(user, user_points):
@@ -88,7 +88,8 @@ def fetch_and_display_user_data():
 
             if user["consecutive_zeros"] >= ZERO_POINTS_THRESHOLD:
                 alert = f"\n{user['name']} has {ZERO_POINTS_THRESHOLD} consecutive 0-point increases!\nOpening URL...\n"
-                js.window.open(ZERO_POINTS_URL)
+                # Since this is now a standard Python script, you can't open a URL directly like in js
+                print(f"Opening URL: {ZERO_POINTS_URL}")  # This is just a print statement now
                 user["consecutive_zeros"] = 0
                 time.sleep(60)
 

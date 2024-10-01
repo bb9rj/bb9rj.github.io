@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CBPT Project</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pyodide/0.22.1/pyodide.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> <!-- Updated Tailwind CSS link -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.22.1/pyodide.js"></script> <!-- Use jsDelivr for Pyodide -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -59,14 +59,18 @@
             outputElement.textContent = 'Loading Pyodide...';
 
             try {
+                // Load Pyodide
                 let pyodide = await loadPyodide();
-                outputElement.textContent = 'Running script...';
+                outputElement.textContent = 'Pyodide loaded. Running script...';
 
                 await pyodide.loadPackage("micropip");
                 const micropip = pyodide.pyimport("micropip");
                 await micropip.install('requests');
 
                 const response = await fetch('cbpt_script.py');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const scriptContent = await response.text();
                 
                 let output = await pyodide.runPython(scriptContent);
