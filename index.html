@@ -1,43 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>bb9rj's GitHub Page</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-        }
-
-        function fetchProfilePicture() {
-            fetch('https://api.github.com/users/bb9rj')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('profile-picture').src = data.avatar_url;
-                })
-                .catch(error => console.error('Error fetching profile picture:', error));
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
         }
     </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .animate-gradient {
+                background-size: 200%;
+                animation: gradient 5s ease infinite;
+            }
+            @keyframes gradient {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-800 min-h-screen flex flex-col items-center justify-center transition-colors duration-300">
-    <button onclick="toggleDarkMode()" class="absolute top-4 right-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
-        Toggle Dark Mode
+    <button id="darkModeToggle" aria-label="Toggle dark mode" class="absolute top-4 right-4 bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
     </button>
 
-    <div class="text-center">
-        <img id="profile-picture" class="w-40 h-40 rounded-full mx-auto mb-4 border-4 border-blue-500 dark:border-blue-300" src="https://via.placeholder.com/150" alt="Profile Picture">
+    <div class="text-center p-8">
+        <div class="relative w-40 h-40 mx-auto mb-4">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary animate-gradient rounded-full"></div>
+            <img id="profilePicture" class="w-full h-full object-cover rounded-full border-4 border-white dark:border-gray-700 relative z-10" src="https://via.placeholder.com/150" alt="Profile Picture">
+        </div>
         <h1 class="text-4xl font-bold mb-4 text-gray-800 dark:text-white">bb9rj's GitHub Page</h1>
         <div class="relative inline-block">
-            <div class="absolute inset-0 bg-blue-500 dark:bg-blue-300 blur-md opacity-50 rounded-lg"></div>
-            <a href="https://github.com/bb9rj?tab=repositories" class="relative inline-block bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-blue-500 dark:text-blue-300 font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+            <div class="absolute inset-0 bg-primary dark:bg-secondary blur-md opacity-50 rounded-lg"></div>
+            <a href="https://github.com/bb9rj?tab=repositories" class="relative inline-block bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-primary dark:text-blue-300 font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
                 View My Repositories
             </a>
         </div>
     </div>
 
     <script>
-        fetchProfilePicture();
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        }
+
+        function fetchProfilePicture() {
+            fetch('https://api.github.com/users/bb9rj')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const profilePicture = document.getElementById('profilePicture');
+                    profilePicture.src = data.avatar_url;
+                    profilePicture.alt = `${data.name || 'bb9rj'}'s GitHub Profile Picture`;
+                })
+                .catch(error => {
+                    console.error('Error fetching profile picture:', error);
+                    // Fallback to a default image if fetch fails
+                    document.getElementById('profilePicture').src = 'https://github.com/identicons/bb9rj.png';
+                });
+        }
+
+        // Initialize dark mode based on user preference
+        if (localStorage.getItem('darkMode') === 'true' || 
+            (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+
+        // Fetch profile picture when the page loads
+        document.addEventListener('DOMContentLoaded', fetchProfilePicture);
     </script>
 </body>
 </html>
