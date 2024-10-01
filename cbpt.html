@@ -21,10 +21,13 @@
         <pre id="output" class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white p-4 rounded-lg overflow-auto max-h-96"></pre>
     </div>
 
+    <!-- Include the cbpt_script.js file -->
+    <script src="cbpt_script.js"></script>
+    
     <script>
-        const runScriptButton = document.getElementById('runScript');
         const outputElement = document.getElementById('output');
         const darkModeToggle = document.getElementById('darkModeToggle');
+        const runScriptButton = document.getElementById('runScript');
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
@@ -39,40 +42,15 @@
 
         darkModeToggle.addEventListener('click', toggleDarkMode);
 
-        async function loadAndRunScript() {
-            runScriptButton.disabled = true;
-            runScriptButton.textContent = 'Loading...';
-            outputElement.textContent = 'Loading script...';
-
+        runScriptButton.addEventListener('click', async () => {
+            outputElement.textContent = 'Running CBPT Script...';
             try {
-                // Load the JavaScript file
-                const response = await fetch('cbpt_script.js');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const scriptContent = await response.text();
-                
-                // Create a new script element and execute it
-                const scriptElement = document.createElement('script');
-                scriptElement.textContent = scriptContent;
-                document.body.appendChild(scriptElement);
-                
-                // Assuming the script has a function named 'runScript' to execute
-                if (typeof runScript === 'function') {
-                    const output = await runScript(); // Call the function from the script
-                    outputElement.textContent = output;
-                } else {
-                    outputElement.textContent = 'No function named runScript found in cbpt_script.js';
-                }
+                await main(); // Call the main function from cbpt_script.js
+                outputElement.textContent = 'Script finished running. Check the console for output.';
             } catch (error) {
                 outputElement.textContent = `An error occurred: ${error.message}`;
-            } finally {
-                runScriptButton.disabled = false;
-                runScriptButton.textContent = 'Run CBPT Script';
             }
-        }
-
-        runScriptButton.addEventListener('click', loadAndRunScript);
+        });
     </script>
 </body>
 </html>
