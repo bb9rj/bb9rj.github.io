@@ -5,20 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CBPT Project</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.2/full/pyodide.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',
-                        secondary: '#1E40AF',
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-800 min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
     <button id="darkModeToggle" aria-label="Toggle dark mode" class="absolute top-4 right-4 bg-primary hover:bg-secondary text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
@@ -53,28 +39,31 @@
 
         darkModeToggle.addEventListener('click', toggleDarkMode);
 
-        async function loadPyodideAndRun() {
+        async function loadAndRunScript() {
             runScriptButton.disabled = true;
             runScriptButton.textContent = 'Loading...';
-            outputElement.textContent = 'Loading Pyodide...';
+            outputElement.textContent = 'Loading script...';
 
             try {
-                // Load Pyodide
-                let pyodide = await loadPyodide();
-                outputElement.textContent = 'Pyodide loaded. Running script...';
-
-                await pyodide.loadPackage("micropip");
-                const micropip = pyodide.pyimport("micropip");
-                await micropip.install('requests');
-
-                const response = await fetch('cbpt_script.py');
+                // Load the JavaScript file
+                const response = await fetch('cbpt_script.js');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const scriptContent = await response.text();
                 
-                let output = await pyodide.runPython(scriptContent);
-                outputElement.textContent = output;
+                // Create a new script element and execute it
+                const scriptElement = document.createElement('script');
+                scriptElement.textContent = scriptContent;
+                document.body.appendChild(scriptElement);
+                
+                // Assuming the script has a function named 'runScript' to execute
+                if (typeof runScript === 'function') {
+                    const output = await runScript(); // Call the function from the script
+                    outputElement.textContent = output;
+                } else {
+                    outputElement.textContent = 'No function named runScript found in cbpt_script.js';
+                }
             } catch (error) {
                 outputElement.textContent = `An error occurred: ${error.message}`;
             } finally {
@@ -83,7 +72,7 @@
             }
         }
 
-        runScriptButton.addEventListener('click', loadPyodideAndRun);
+        runScriptButton.addEventListener('click', loadAndRunScript);
     </script>
 </body>
 </html>
