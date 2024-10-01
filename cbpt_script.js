@@ -32,8 +32,16 @@ function alignment_spaces_for_points(current_points_str, max_points_length) {
 }
 
 async function fetch_user_points(user) {
-    const response = await fetch(`${API_URL}/${user.clan}`);
-    return response.json();
+    try {
+        const response = await fetch(`${API_URL}/${user.clan}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    } catch (error) {
+        console.error(`Failed to fetch points for user ${user.name}:`, error);
+        return {};
+    }
 }
 
 function update_user_points(user, user_points) {
@@ -90,10 +98,10 @@ async function fetch_and_display_user_data() {
             }
 
             if (user.consecutive_zeros >= ZERO_POINTS_THRESHOLD) {
-                alert = `\n${user.name} has ${ZERO_POINTS_THRESHOLD} consecutive 0-point increases!\nOpening URL...\n`;
+                alert += `\n${user.name} has ${ZERO_POINTS_THRESHOLD} consecutive 0-point increases!\nOpening URL...\n`;
                 console.log(`Opening URL: ${ZERO_POINTS_URL}`);
-                user.consecutive_zeros = 0;
-                await new Promise(resolve => setTimeout(resolve, 60000));
+                user.consecutive_zeros = 0; // Reset after alert
+                await new Promise(resolve => setTimeout(resolve, 60000)); // Wait before next check
             }
 
             const points_difference = user.current_points - user.last_points;
@@ -101,7 +109,6 @@ async function fetch_and_display_user_data() {
             if (huge_suffix) huge_suffix_count += 1;
 
             const current_points_str = user.current_points.toLocaleString();
-            
             const points_difference_str = points_difference !== 0 ? `${points_difference >= 0 ? '+' : ''}${points_difference}${huge_suffix}` : "";
             
             print_user_data(user, current_points_str, points_difference_str, max_points_length);
@@ -119,11 +126,23 @@ async function fetch_and_display_user_data() {
     }
 }
 
+function getFormattedTimestamp() {
+    return new Date().toLocaleString('en-US', {
+        weekday: 'short',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+}
+
 async function main() {
     console.log("\nFetching initial user data...\n");
     await fetch_and_display_user_data();
 
-    const timestamp = new Date().toLocaleString('en-US', { weekday: 'short', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const timestamp = getFormattedTimestamp();
     console.log(`\n${data.labels.start}${alignment_spaces(data.labels.start)}: ${timestamp}`);
 
     try {
@@ -134,7 +153,7 @@ async function main() {
                 }
             }
             
-            const timestamp = new Date().toLocaleString('en-US', { weekday: 'short', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            const timestamp = getFormattedTimestamp();
             console.log(`\n${data.labels.time}${alignment_spaces(data.labels.time)}: ${timestamp}`);
             
             await fetch_and_display_user_data();
